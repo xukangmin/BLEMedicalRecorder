@@ -22,17 +22,13 @@ wav_data = []
 #         data_read = data_read + 1
 
 
-with open('TEST12.CSV') as csvfile:
-    rd = csv.reader(csvfile, delimiter=',', quotechar='"')
-    for row in rd:
-        wav_data.append(int(row[0]))
 
 
-max_val = max(wav_data)
+# max_val = max(wav_data)
 
-min_val = min(wav_data)
+# min_val = min(wav_data)
 
-max_val = max(max_val, abs(min_val))
+# max_val = max(max_val, abs(min_val))
 # x = datetime.datetime.now
 
 sound_file_name = 'sdcard.wav'
@@ -46,11 +42,21 @@ obj.setsampwidth(2)
 obj.setframerate(sampleRate)
 
 
+with open("TEST15.bin","rb") as f:
+    while 1:
+        byte = f.read(2)
 
-for i in wav_data:
-   j = int((i / max_val) * 32767)
-   data = struct.pack('<h', j)
-   obj.writeframesraw( data )
+        if not byte:
+            break
+        else:
+            # wav_data.append(struct.unpack('<h', byte)[0])
+            obj.writeframesraw(byte)
+
+
+# for i in wav_data:
+#    j = int((i / max_val) * 32767)
+#    data = struct.pack('<h', j)
+#    obj.writeframesraw( data )
 obj.close()
 
 playsound(sound_file_name)

@@ -5,27 +5,27 @@ import datetime
 
 wav_data = []
 
-# record_seconds = 10 # record total seconds
+record_seconds = 10 # record total seconds
 
-# estimate_data_size = 10 * 16000
+estimate_data_size = 10 * 16000
 
-# data_read = 0
-
-
+data_read = 0
 
 
-# with serial.Serial('/dev/ttyACM0', 115200, timeout=100) as ser:
-#     while data_read < estimate_data_size:
-#         line = ser.readline()   # read a '\n' terminated line
+
+
+with serial.Serial('/dev/ttyACM0', 115200, timeout=30000) as ser:
+    while data_read < estimate_data_size:
+        line = ser.readline()   # read a '\n' terminated line
         
-#         wav_data.append(int(line))
-#         data_read = data_read + 1
+        wav_data.append(int(line))
+        data_read = data_read + 1
 
 
-with open('TEST12.CSV') as csvfile:
-    rd = csv.reader(csvfile, delimiter=',', quotechar='"')
-    for row in rd:
-        wav_data.append(int(row[0]))
+# with open('TEST11.CSV') as csvfile:
+#     rd = csv.reader(csvfile, delimiter=',', quotechar='"')
+#     for row in rd:
+#         wav_data.append(int(row[0]))
 
 
 max_val = max(wav_data)
@@ -35,7 +35,7 @@ min_val = min(wav_data)
 max_val = max(max_val, abs(min_val))
 # x = datetime.datetime.now
 
-sound_file_name = 'sdcard.wav'
+sound_file_name = 'sdCardserial2.wav'
 
 sampleRate = 16000.0 # hertz
 duration = 1.0 # seconds
