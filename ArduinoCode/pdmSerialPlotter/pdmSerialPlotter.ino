@@ -100,7 +100,7 @@ void loop() {
   if (started)
   {
 
-     
+     // test
       
       if (bufferStatus[sdIndex] == 2) {
          myFile.write((const char*)sampleBuffer[sdIndex], 512);

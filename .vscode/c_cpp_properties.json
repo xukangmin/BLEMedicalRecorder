@@ -1,0 +1,21 @@
+{
+    "configurations": [
+        {
+            "name": "Linux",
+            "includePath": [
+                "/home/kangmin/.arduino15/packages/TinyCore/hardware/avr/0.0.6/**",
+                "/home/kangmin/.arduino15/packages/adafruit/tools/**",
+                "/home/kangmin/.arduino15/packages/adafruit/hardware/nrf52/0.18.5/**",
+                "/home/kangmin/Arduino/libraries/**",
+                "/home/kangmin/.arduino15/packages/adafruit/hardware/nrf52/0.18.5/variants/**",
+                "/home/kangmin/.arduino15/packages/adafruit/hardware/nrf52/0.18.5/cores/nRF5/**"
+            ],
+            "forcedInclude": [],
+            "intelliSenseMode": "gcc-x64",
+            "compilerPath": "/usr/bin/clang",
+            "cStandard": "c11",
+            "cppStandard": "c++17"
+        }
+    ],
+    "version": 4
+}

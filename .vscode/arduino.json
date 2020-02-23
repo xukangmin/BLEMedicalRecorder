@@ -1,0 +1,6 @@
+{
+    "board": "TinyCore:avr:tiny32",
+    "port": "/dev/ttyACM0",
+    "programmer": "AVRISP mkII",
+    "sketch": "ArduinoCode/pdmSerialPlotter/pdmSerialPlotter.ino"
+}
