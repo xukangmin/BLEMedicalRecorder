@@ -70,7 +70,8 @@ void setup() {
     while (1);
   }
 
-  
+  Serial.println("inited");
+  delay(100);
   
 }
 
