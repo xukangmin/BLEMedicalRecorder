@@ -16,10 +16,18 @@
 #include <Adafruit_LittleFS.h>
 #include <InternalFileSystem.h>
 
+using namespace Adafruit_LittleFS_Namespace;
+
 #define BUFFER_SIZE 256
 #define NUM_BUFFER 10
 
-File myFile;
+#define CONFIG_FILENAME    "/CONFIG.TXT"
+
+SDLib::File myFile;
+Adafruit_LittleFS_Namespace::File configFile(InternalFS);
+
+unsigned int file_num;
+uint8_t buffer[64] = { 0 };
 
 // BLE Service
 BLEDfu  bledfu;  // OTA DFU service
@@ -74,6 +82,12 @@ void setup() {
 
   Serial.println("ble_init");
   delay(100);
+
+  InternalFS.begin();
+  init_internal_config();
+
+  Serial.print("file_num=");
+  Serial.println(file_num);
 }
 
 void sd_init() {
@@ -82,6 +96,41 @@ void sd_init() {
     while (1);
   }
 
+}
+
+void init_internal_config() {
+
+  configFile.open(CONFIG_FILENAME, FILE_O_READ);
+  
+  if ( configFile )
+  {
+      uint32_t readlen;
+      
+      readlen = configFile.read(buffer, sizeof(buffer));
+      
+      if (readlen == 4) {
+        memcpy(&file_num, buffer, sizeof(unsigned int));  
+      }  
+  } 
+  else {
+    configFile.open(CONFIG_FILENAME, FILE_O_WRITE);
+    file_num = 0;
+    memcpy(buffer, &file_num, sizeof(unsigned int));
+    configFile.write(buffer, sizeof(unsigned int));
+  }
+  configFile.close();
+}
+
+void file_num_inc() {
+  if( configFile.open(CONFIG_FILENAME, FILE_O_WRITE) )
+  {
+    configFile.seek(0);
+    file_num++;
+    memcpy(buffer, &file_num, sizeof(unsigned int));
+    configFile.write(buffer, sizeof(unsigned int));
+    configFile.close();
+  }
+  
 }
 
 void pdm_init() {
@@ -257,18 +306,7 @@ void loop() {
     digitalWrite(A5, LOW);
     myFile.close();
 
-    myFile = SD.open(fileName);
   
-    if (myFile) {
-      Serial.println(fileName);
-      delay(1);
-  
-      // read from the file until there's nothing else in it:
-      while (myFile.available()) {
-        Serial.write(myFile.read());
-      }
-      myFile.close();
-      }
    }
   
 }
@@ -277,22 +315,55 @@ void process_recording() {
   
   unsigned short timestamp = 0;
 
-  if (ble_cmd_buff[0] == 0x01) { // start recording, return file name
+  if (ble_cmd_buff[0] == 0x01 && started == 0) { // start recording, return file name
     memcpy(&rc_length, ble_cmd_buff + 1, sizeof(unsigned short));
     memcpy(&timestamp, ble_cmd_buff + 1 + sizeof(unsigned short), sizeof(unsigned short));
 
+    file_num_inc();
+
     memset(fileName,0,sizeof(fileName));
 
-    sprintf(fileName, "RC%d.raw", timestamp);
-    Serial.print("rc_length=");
-    Serial.print(rc_length);
+    sprintf(fileName, "R%lu", file_num);
+
     Serial.println("start recording");
+    Serial.println(fileName);
     digitalWrite(A5, HIGH);
     myFile = SD.open(fileName, FILE_WRITE);
 
     startTS = millis();
 
     started = 1;
+  }
+  else if (ble_cmd_buff[0] == 0x02) { // read recent recorded file
+
+    Serial.println(fileName);
+    myFile = SD.open(fileName);
+  
+    if (myFile) {
+      Serial.println("file opened");
+      delay(1);
+  
+      const uint16_t data_mtu = Bluefruit.Connection(0)->getMtu() - 3;
+
+      uint8_t *ble_buffer = (uint8_t*)malloc(data_mtu);
+
+      uint8_t ble_index = 0;
+     
+      // read from the file until there's nothing else in it:
+      while (myFile.available()) {
+
+        ble_buffer[ble_index] = myFile.read();
+        ble_index++;
+
+        if (ble_index == data_mtu) {
+          if ( !bleuart.write(ble_buffer, data_mtu) ) break;
+          ble_index = 0;
+        }
+      }
+
+      free(ble_buffer);
+      myFile.close();
+    }
   }
 }
 
@@ -373,7 +444,7 @@ void disconnect_callback(uint16_t conn_handle, uint8_t reason)
 {
   (void) conn_handle;
   (void) reason;
-
+ 
   Serial.println();
   Serial.print("Disconnected, reason = 0x"); Serial.println(reason, HEX);
 }
