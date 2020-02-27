@@ -19,7 +19,7 @@
 using namespace Adafruit_LittleFS_Namespace;
 
 #define BUFFER_SIZE 256
-#define NUM_BUFFER 10
+#define NUM_BUFFER 50
 
 #define CONFIG_FILENAME    "/CONFIG.TXT"
 
@@ -37,6 +37,8 @@ BLEBas  blebas;  // battery
 
 
 volatile unsigned long totalRead = 0;
+
+short pdmBuffer[BUFFER_SIZE];
 
 // buffer to read samples into, each sample is 16-bits
 short sampleBuffer[NUM_BUFFER][BUFFER_SIZE];
@@ -231,25 +233,25 @@ void loop() {
 
     bleHandler();
   }
-
-  if (Serial.available() > 0) {
-    char c = Serial.read();
-
-    if (c == 's') {
-      // open new file and record for 10 seconds
-      Serial.println("start recording");
-      digitalWrite(A5, HIGH);
-      myFile = SD.open(fileName, FILE_WRITE);
-
-      startTS = millis();
-
-      started = 1;
-      
-    } else if (c = 'c') {
-      
-    }
-    
-  }
+//
+//  if (Serial.available() > 0) {
+//    char c = Serial.read();
+//
+//    if (c == 's') {
+//      // open new file and record for 10 seconds
+//      Serial.println("start recording");
+//      digitalWrite(A5, HIGH);
+//      myFile = SD.open(fileName, FILE_WRITE);
+//
+//      startTS = millis();
+//
+//      started = 1;
+//      
+//    } else if (c = 'c') {
+//      
+//    }
+//    
+//  }
   
   // wait for samples to be read
 
@@ -269,7 +271,6 @@ void loop() {
 
         Serial.print(",pdmIndex=");
         Serial.println(pdmIndex);
-        
         bufferStatus[sdIndex] = 0;
         samplesRead[sdIndex] = 0;
 
@@ -278,7 +279,7 @@ void loop() {
           sdIndex = 0; 
        }
       }
-    
+  
 //     for(int i = 0; i < NUM_BUFFER; i++) {
 //      if (bufferStatus[i] == 2) { // ready for spi
 //        for (int j = 0; j < samplesRead[i]; j++) {
@@ -303,10 +304,14 @@ void loop() {
 
   if (started == 1 && millis() - startTS > rc_length * 1000) {
     started = 0;
+    Serial.println("close file1");
+    delay(10);
     digitalWrite(A5, LOW);
+    Serial.println("close file2");
+    delay(10);
     myFile.close();
-
-  
+    Serial.println("close file3");
+    delay(10);
    }
   
 }
@@ -457,7 +462,8 @@ void onPDMdata() {
 
   if (started)
   {
-    if (bufferStatus[pdmIndex] == 0) {
+     if (bufferStatus[pdmIndex] == 0)
+     {
        bufferStatus[pdmIndex] = 1;
        PDM.read(sampleBuffer[pdmIndex], bytesAvailable);
        samplesRead[pdmIndex] = bytesAvailable / 2;
@@ -467,11 +473,12 @@ void onPDMdata() {
        if (pdmIndex == NUM_BUFFER) {
           pdmIndex = 0; 
        }
-    }
-    else {
-      Serial.println("data missing");
-    }
-     
+     } else {
+       Serial.println("sd read too slow");
+       PDM.read(sampleBuffer[pdmIndex], bytesAvailable);
+     }
+
+   
 //    
 //     for(int i = 0; i < NUM_BUFFER; i++) {
 //      if (bufferStatus[i] == 0) {
